@@ -36,22 +36,25 @@ CREATE TABLE payments (
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
 
+-- Volume is sized so a sequential scan of payments is measurably slower than an index lookup
+-- (~200k orders, ~500k payments). Smaller seeds hide the missing-index bottleneck.
+
 -- Users: #1 is the load-test user (password set by the API), the rest only own seeded history.
 INSERT INTO users (email)
 SELECT CASE WHEN i = 1 THEN 'loadtest@payflow.local' ELSE format('customer%s@payflow.local', i) END
-FROM generate_series(1, 100) AS i;
+FROM generate_series(1, 1000) AS i;
 
--- 10,000 historical orders spread across the 100 users and the last 90 days.
+-- 200,000 historical orders spread across the 1,000 users and the last 90 days.
 INSERT INTO orders (user_id, amount, currency, status, created_at, updated_at)
-SELECT (i % 100) + 1,
+SELECT (i % 1000) + 1,
        500 + (abs(hashtext('amt' || i)) % 99500),
        (ARRAY['USD', 'EUR', 'GBP', 'INR'])[1 + (i % 4)],
        'paid',
        ts, ts
-FROM generate_series(1, 10000) AS i,
+FROM generate_series(1, 200000) AS i,
      LATERAL (SELECT now() - make_interval(secs => abs(hashtext('ts' || i)) % (90 * 86400))) AS t(ts);
 
--- 1-3 payment attempts per order: earlier attempts declined, the last one captured (~20k rows).
+-- 1-4 payment attempts per order: earlier attempts declined, the last one captured (~500k rows).
 INSERT INTO payments (order_id, idempotency_key, amount, currency, status, decline_reason, created_at, updated_at)
 SELECT o.id,
        gen_random_uuid()::text,
@@ -63,8 +66,8 @@ SELECT o.id,
        o.created_at + make_interval(secs => a.n * 30)
 FROM orders o
 CROSS JOIN LATERAL (
-  SELECT n, 1 + (abs(hashtext(o.id::text)) % 3) AS total
-  FROM generate_series(1, 1 + (abs(hashtext(o.id::text)) % 3)) AS n
+  SELECT n, 1 + (abs(hashtext(o.id::text)) % 4) AS total
+  FROM generate_series(1, 1 + (abs(hashtext(o.id::text)) % 4)) AS n
 ) AS a;
 
 ANALYZE;

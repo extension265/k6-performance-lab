@@ -1,6 +1,7 @@
 # PayFlow API
 
 A mock payment API that the k6 suite runs against. Node 24 LTS, Express 5, Postgres 18.
+The seed data is 1,000 users, 200k orders and about 500k payments. It is sized so the missing-index bottleneck is measurable.
 
 > **The bottlenecks below are seeded on purpose.** They are toggleable so the Phase 6
 > investigation can be reproduced. They are not production bugs that were discovered.
@@ -57,3 +58,5 @@ connection across the simulated provider call, so pool size limits payment throu
 - `payflow_db_pool_acquire_duration_seconds`: time spent waiting for a pool connection.
 - `payflow_db_query_duration_seconds{query}`: time per named query. Under N+1, `payment_by_id` volume rises.
 - `payflow_payments_total{outcome}`, `payflow_bottleneck_enabled{bottleneck}`, `payflow_bcrypt_cost`
+
+Note: `prom-client` (pinned at 15.1.3) is deprecated in favour of `@prometheus-io/client`; a swap is planned once that package reaches 1.0.
