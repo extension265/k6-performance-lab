@@ -8,8 +8,10 @@
     "node": ">=24"
   },
   "scripts": {
-    "stack:up": "node -e \"console.error('stack:up is not implemented yet (Phase 1)'); process.exit(1)\"",
-    "stack:down": "node -e \"console.error('stack:down is not implemented yet (Phase 1)'); process.exit(1)\"",
+    "stack:up": "docker compose up -d --build --wait",
+    "stack:down": "docker compose down",
+    "stack:reset": "docker compose down -v",
+    "stack:logs": "docker compose logs -f api",
     "test:contract": "node -e \"console.error('test:contract is not implemented yet (Phase 2)'); process.exit(1)\"",
     "test:smoke": "node -e \"console.error('test:smoke is not implemented yet (Phase 3)'); process.exit(1)\"",
     "test:load": "node -e \"console.error('test:load is not implemented yet (Phase 3)'); process.exit(1)\"",
