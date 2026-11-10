@@ -151,6 +151,8 @@ These are intentionally seeded so the investigation in Phase 6 is reproducible. 
 
 **Reporting:** `handleSummary()` writes `reports/<scenario>-summary.json`. Also support the k6 web dashboard HTML export (`K6_WEB_DASHBOARD=true`, `K6_WEB_DASHBOARD_EXPORT=reports/<scenario>.html`).
 
+**Runtime:** k6 runs in the pinned `grafana/k6:2.3.0` image (compose service `k6`, profile `tools`) on the compose network, against `http://api:3000`. A fresh clone needs only Docker, and traffic avoids Docker Desktop's port forwarding. `scripts/run-k6.js` wraps it for the `npm run test:*` scripts.
+
 **Acceptance:** `npm run test:smoke` passes all thresholds; HTML report generated.
 
 ---
@@ -191,7 +193,13 @@ Use the official Grafana k6 GitHub actions (`setup-k6-action` / `run-k6-action`)
 
 **I will run these myself; Claude Code prepares scripts and the doc template.**
 
-1. `BOTTLENECK_MODE=on`: run `stress.js` and `breakpoint.js`. Record:
+**Always start each measured run from the same seeded database.** Every load run inserts orders and payments. The tables grow and the results drift, especially for the missing-index bottleneck, where scan time depends on the size of `payments`. Use:
+
+- `npm run perf:fresh -- <scenario>`: runs `docker compose down -v`, then `up --build --wait` (re-runs `init.sql`), waits for `/health`, then runs the scenario. Takes about 30s more than a plain run.
+- `npm run stack:fresh`: the same reset and wait, without running a scenario.
+- Set the bottleneck flags (e.g. `$env:BOTTLENECK_POOL='off'` in PowerShell) **before** `perf:fresh`, so the fresh stack starts with them. The runner logs the API's active config at the start of every run, so each result can be traced to its configuration.
+
+1. `BOTTLENECK_MODE=on`: run `stress.js` and `breakpoint.js` (via `perf:fresh`). Record:
    - max sustainable RPS
    - p95/p99 per endpoint
    - error rate
