@@ -16,7 +16,7 @@
     "contract:build": "node postman/build-collection.js",
     "dashboards:build": "node observability/grafana/build-api-vs-load.js",
     "dashboards:check": "node scripts/check-dashboards.js",
-    "test:contract": "docker compose run --rm --no-deps --build newman run payflow.postman_collection.json -e local.postman_environment.json --env-var baseUrl=http://api:3000 -r cli,htmlextra --reporter-htmlextra-export /reports/newman/contract.html --reporter-htmlextra-title \"PayFlow API contract\"",
+    "test:contract": "docker compose run --rm --no-deps --build newman run payflow.postman_collection.json -e local.postman_environment.json --env-var baseUrl=http://api:3000 -r cli,htmlextra,json --reporter-json-export /reports/newman/contract.json --reporter-htmlextra-export /reports/newman/contract.html --reporter-htmlextra-title \"PayFlow API contract\"",
     "test:smoke": "node scripts/run-k6.js smoke",
     "test:smoke:prom": "node scripts/run-k6.js smoke --prom",
     "test:load": "node scripts/run-k6.js load",
