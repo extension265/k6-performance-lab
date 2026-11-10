@@ -98,7 +98,7 @@ Node 24 LTS + Express + `pg` + Postgres, run via Docker Compose. API image base 
 1. Small DB pool (`POOL_SIZE=5` when on, `20` when off).
 2. Missing index on `payments.order_id` (migration adds it when off).
 3. N+1 query in `GET /orders/:id` (single JOIN when off).
-4. High bcrypt cost in `/auth/token` (12 when on, 8 when off). Also cache tokens in k6 so auth isn't hammered per iteration.
+4. High bcrypt cost in `/auth/token` (12 when on, 8 when off). k6 caches the token for most iterations, but a configurable share (default 15%) re-authenticates so this bottleneck stays visible (see Phase 3 `auth.js`).
 
 These are intentionally seeded so the investigation in Phase 6 is reproducible. **README must state openly that they're seeded.** Do not present them as discovered production bugs.
 
@@ -122,7 +122,7 @@ These are intentionally seeded so the investigation in Phase 6 is reproducible. 
 
 **lib/**
 - `config.js`: base URL and env selection via `__ENV`.
-- `auth.js`: gets token once in `setup()`, shares it.
+- `auth.js`: gets token once in `setup()`, shares it. **But** caching the token alone makes the bcrypt bottleneck invisible, so a configurable share of iterations (`FRESH_AUTH_RATIO`, default `0.15` = 15%) calls `POST /auth/token` fresh instead of using the cached token. Tag those requests (`name:POST /auth/token`) so auth latency is reported separately, and set it to `0` to measure the other bottlenecks in isolation.
 - `checks.js`: reusable check helpers.
 - `metrics.js`: custom metrics:
   - `payment_success_rate` (Rate)
