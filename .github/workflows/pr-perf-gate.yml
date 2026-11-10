@@ -1,0 +1,61 @@
+name: PR perf gate
+
+# Functional correctness under light load: Newman contract + k6 smoke with SLO thresholds.
+# Latency on shared runners is noisy; it gates via the smoke thresholds but is never used as a result.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: perf-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: ./.github/actions/start-stack
+
+      - name: Newman contract
+        run: npm run test:contract
+
+      - uses: grafana/setup-k6-action@v1.3.0
+        with:
+          k6-version: 2.3.0 # same as the grafana/k6 image used locally
+
+      - name: k6 smoke (fails the job on any threshold breach)
+        uses: grafana/run-k6-action@v1.6.0
+        env:
+          TARGET: local # k6 on the runner -> API published on localhost:3000
+          REPORTS_DIR: reports
+          K6_WEB_DASHBOARD: "true"
+          K6_WEB_DASHBOARD_EXPORT: reports/smoke.html
+          K6_SYSTEM_TAGS: status,method,name,group,check,error_code,scenario,expected_response
+        with:
+          path: k6/scenarios/smoke.js
+          flags: --tag testid=ci-${{ github.run_id }}
+          disable-analytics: true
+          cloud-comment-on-pr: false
+
+      - name: Results table
+        if: always()
+        run: node scripts/ci-summary.js smoke
+
+      - name: API logs on failure
+        if: failure()
+        run: docker compose logs --tail 200 api postgres
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: perf-gate-reports
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14

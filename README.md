@@ -24,7 +24,17 @@
 
 ## CI performance gate
 
-<!-- How the gate works + screenshot of a failed gate -->
+<!-- Phase 7: screenshot of a failed gate -->
+
+Every pull request runs [`pr-perf-gate.yml`](.github/workflows/pr-perf-gate.yml) against postgres + api only (no monitoring stack):
+
+1. **Newman contract:** all 133 assertions must pass.
+2. **k6 smoke** (2 VUs, 30s) with the shared SLO thresholds. Any breach fails the job (k6 exit 99). This includes `idempotency_violations == 0`.
+3. A results table goes to the job summary, and the reports are uploaded as artifacts.
+
+**CI checks functional correctness under light load. It does not measure performance.** Latency numbers in CI come from shared GitHub-hosted runners, vary from run to run, and are never used as results. Controlled measurements live in [docs/results.md](docs/results.md).
+
+Also: [`load-test.yml`](.github/workflows/load-test.yml) (manual, any scenario) and [`publish-reports.yml`](.github/workflows/publish-reports.yml) (latest HTML reports on GitHub Pages).
 
 ## Reports and findings
 

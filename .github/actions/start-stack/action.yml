@@ -1,0 +1,37 @@
+name: Start PayFlow stack
+description: >
+  Builds and starts postgres + api only (no monitoring stack in CI), prepares reports/ with the
+  right ownership for the non-root Newman container, and waits for /health.
+
+runs:
+  using: composite
+  steps:
+    - name: Build images (api, newman)
+      shell: bash
+      run: docker compose build api newman
+
+    - name: Prepare reports/ (ownership matches the container users)
+      shell: bash
+      run: |
+        # k6 runs on the runner itself (run-k6-action) and writes reports/ as the runner user.
+        mkdir -p reports
+        # Newman runs in a container as its non-root image user (node, uid 1000), while the runner
+        # user is typically uid 1001. Pre-create its output dir owned by exactly that uid:gid,
+        # read from the built image rather than hard-coded. No world-writable directories.
+        read -r NEWMAN_UID NEWMAN_GID < <(docker compose run --rm --no-deps --entrypoint sh newman -c 'echo "$(id -u) $(id -g)"' 2>/dev/null | tail -n1)
+        echo "newman container user: ${NEWMAN_UID}:${NEWMAN_GID} / runner user: $(id -u):$(id -g)"
+        sudo install -d -m 0755 -o "${NEWMAN_UID}" -g "${NEWMAN_GID}" reports/newman
+        ls -ld reports reports/newman
+
+    - name: Start postgres + api
+      shell: bash
+      run: docker compose up -d --wait --wait-timeout 300 postgres api
+
+    - name: Wait for /health
+      shell: bash
+      run: |
+        for i in $(seq 1 60); do
+          if curl -fsS http://localhost:3000/health; then echo; exit 0; fi
+          sleep 2
+        done
+        echo "API never became healthy"; docker compose logs api postgres; exit 1
