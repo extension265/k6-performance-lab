@@ -1,0 +1,87 @@
+name: Publish reports
+
+# GitHub Pages: fresh contract + smoke reports from main, plus the latest manual Load test
+# report for each scenario (looked up by artifact name).
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: [Load test]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read # find and download Load test artifacts
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: ./.github/actions/start-stack
+
+      - name: Newman contract
+        continue-on-error: true # publish the report even if it fails
+        run: npm run test:contract
+
+      - uses: grafana/setup-k6-action@v1.3.0
+        with:
+          k6-version: 2.3.0
+
+      - name: k6 smoke
+        continue-on-error: true
+        uses: grafana/run-k6-action@v1.6.0
+        env:
+          TARGET: local
+          REPORTS_DIR: reports
+          K6_WEB_DASHBOARD: "true"
+          K6_WEB_DASHBOARD_EXPORT: reports/smoke.html
+          K6_SYSTEM_TAGS: status,method,name,group,check,error_code,scenario,expected_response
+        with:
+          path: k6/scenarios/smoke.js
+          flags: --tag testid=pages-${{ github.run_id }}
+          disable-analytics: true
+          cloud-comment-on-pr: false
+
+      - name: Fetch latest Load test reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for s in load stress spike breakpoint soak; do
+            run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=k6-report-${s}&per_page=1" \
+              --jq '.artifacts[] | select(.expired == false) | .workflow_run.id' | head -n1)
+            [ -z "$run_id" ] && { echo "no report for ${s} yet"; continue; }
+            mkdir -p "pages-input/${s}"
+            gh run download "$run_id" --repo "$GITHUB_REPOSITORY" -n "k6-report-${s}" -D "pages-input/${s}"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq '{run_id: .id, created_at: .created_at}' > "pages-input/${s}/meta.json"
+            echo "${s}: run ${run_id}"
+          done
+
+      - name: Build site
+        run: node scripts/build-pages-site.js
+
+      - uses: actions/configure-pages@v6.0.0
+
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5.0.1

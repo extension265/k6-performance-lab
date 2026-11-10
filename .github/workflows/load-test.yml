@@ -1,0 +1,57 @@
+name: Load test
+
+# Manual: run any scenario on a runner and keep its HTML report. Runner numbers are for
+# inspecting the reports, not results (shared hardware). publish-reports picks the reports up.
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: k6 scenario
+        type: choice
+        options: [smoke, load, stress, spike, breakpoint, soak]
+        default: load
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: ./.github/actions/start-stack
+
+      - uses: grafana/setup-k6-action@v1.3.0
+        with:
+          k6-version: 2.3.0
+
+      - name: k6 ${{ inputs.scenario }}
+        uses: grafana/run-k6-action@v1.6.0
+        env:
+          TARGET: local
+          REPORTS_DIR: reports
+          K6_WEB_DASHBOARD: "true"
+          K6_WEB_DASHBOARD_EXPORT: reports/${{ inputs.scenario }}.html
+          K6_SYSTEM_TAGS: status,method,name,group,check,error_code,scenario,expected_response
+        with:
+          path: k6/scenarios/${{ inputs.scenario }}.js
+          flags: --tag testid=ci-${{ github.run_id }}-${{ inputs.scenario }}
+          disable-analytics: true
+          cloud-comment-on-pr: false
+
+      - name: Results table
+        if: always()
+        run: node scripts/ci-summary.js ${{ inputs.scenario }}
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: k6-report-${{ inputs.scenario }} # publish-reports looks artifacts up by this name
+          path: |
+            reports/${{ inputs.scenario }}.html
+            reports/${{ inputs.scenario }}-summary.json
+          if-no-files-found: warn
+          retention-days: 90

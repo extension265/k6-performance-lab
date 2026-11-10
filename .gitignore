@@ -20,3 +20,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# GitHub Pages build output (CI)
+_site/
+pages-input/
