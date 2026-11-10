@@ -8,7 +8,9 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export const isUuid = (v) => typeof v === 'string' && UUID_RE.test(v);
 
 export function requireUuid(value, field) {
-  if (!isUuid(value)) throw badRequest('invalid_request', `${field} must be a UUID`, { field });
+  if (!isUuid(value)) {
+    throw badRequest('invalid_request', `${field} must be a UUID`, [{ field, message: 'must be a UUID' }]);
+  }
   return value.toLowerCase();
 }
 
