@@ -12,12 +12,17 @@
     "stack:down": "docker compose down",
     "stack:reset": "docker compose down -v",
     "stack:logs": "docker compose logs -f api",
-    "test:contract": "node -e \"console.error('test:contract is not implemented yet (Phase 2)'); process.exit(1)\"",
+    "contract:build": "node postman/build-collection.js",
+    "test:contract": "newman run postman/payflow.postman_collection.json -e postman/local.postman_environment.json -r cli,htmlextra --reporter-htmlextra-export reports/newman/contract.html --reporter-htmlextra-title \"PayFlow API contract\"",
     "test:smoke": "node -e \"console.error('test:smoke is not implemented yet (Phase 3)'); process.exit(1)\"",
     "test:load": "node -e \"console.error('test:load is not implemented yet (Phase 3)'); process.exit(1)\"",
     "test:stress": "node -e \"console.error('test:stress is not implemented yet (Phase 3)'); process.exit(1)\"",
     "test:spike": "node -e \"console.error('test:spike is not implemented yet (Phase 3)'); process.exit(1)\"",
     "test:soak": "node -e \"console.error('test:soak is not implemented yet (Phase 3)'); process.exit(1)\"",
     "test:breakpoint": "node -e \"console.error('test:breakpoint is not implemented yet (Phase 3)'); process.exit(1)\""
+  },
+  "devDependencies": {
+    "newman": "6.2.3",
+    "newman-reporter-htmlextra": "1.23.1"
   }
 }
