@@ -198,6 +198,7 @@ Use the official Grafana k6 GitHub actions (`setup-k6-action` / `run-k6-action`)
 - `npm run perf:fresh -- <scenario>`: runs `docker compose down -v`, then `up --build --wait` (re-runs `init.sql`), waits for `/health`, then runs the scenario. Takes about 30s more than a plain run.
 - `npm run stack:fresh`: the same reset and wait, without running a scenario.
 - Set the bottleneck flags (e.g. `$env:BOTTLENECK_POOL='off'` in PowerShell) **before** `perf:fresh`, so the fresh stack starts with them. The runner logs the API's active config at the start of every run, so each result can be traced to its configuration.
+- **A result is invalid if k6 CPU is above 80% of its limit** (the k6 container is capped at 2 CPUs / 1g). When that happens, the load generator is the bottleneck, not the API. Check the k6 CPU panel on the "API vs Load" dashboard for every recorded run, and discard and re-run (e.g. with fewer VUs or a lower rate) if it was crossed.
 
 1. `BOTTLENECK_MODE=on`: run `stress.js` and `breakpoint.js` (via `perf:fresh`). Record:
    - max sustainable RPS
