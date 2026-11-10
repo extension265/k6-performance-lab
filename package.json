@@ -1,0 +1,20 @@
+{
+  "name": "k6-performance-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Performance engineering lab: a payment API load tested end to end with k6, Newman contract gate, Prometheus/Grafana observability and a CI perf gate.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "stack:up": "node -e \"console.error('stack:up is not implemented yet (Phase 1)'); process.exit(1)\"",
+    "stack:down": "node -e \"console.error('stack:down is not implemented yet (Phase 1)'); process.exit(1)\"",
+    "test:contract": "node -e \"console.error('test:contract is not implemented yet (Phase 2)'); process.exit(1)\"",
+    "test:smoke": "node -e \"console.error('test:smoke is not implemented yet (Phase 3)'); process.exit(1)\"",
+    "test:load": "node -e \"console.error('test:load is not implemented yet (Phase 3)'); process.exit(1)\"",
+    "test:stress": "node -e \"console.error('test:stress is not implemented yet (Phase 3)'); process.exit(1)\"",
+    "test:spike": "node -e \"console.error('test:spike is not implemented yet (Phase 3)'); process.exit(1)\"",
+    "test:soak": "node -e \"console.error('test:soak is not implemented yet (Phase 3)'); process.exit(1)\"",
+    "test:breakpoint": "node -e \"console.error('test:breakpoint is not implemented yet (Phase 3)'); process.exit(1)\""
+  }
+}

@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Local test output (k6 summaries, HTML dashboards, Newman reports)
+reports/*
+!reports/.gitkeep
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
