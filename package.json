@@ -12,14 +12,16 @@
     "stack:down": "docker compose down",
     "stack:reset": "docker compose down -v",
     "stack:logs": "docker compose logs -f api",
+    "stack:fresh": "node scripts/stack.js",
     "contract:build": "node postman/build-collection.js",
     "test:contract": "newman run postman/payflow.postman_collection.json -e postman/local.postman_environment.json -r cli,htmlextra --reporter-htmlextra-export reports/newman/contract.html --reporter-htmlextra-title \"PayFlow API contract\"",
-    "test:smoke": "node -e \"console.error('test:smoke is not implemented yet (Phase 3)'); process.exit(1)\"",
-    "test:load": "node -e \"console.error('test:load is not implemented yet (Phase 3)'); process.exit(1)\"",
-    "test:stress": "node -e \"console.error('test:stress is not implemented yet (Phase 3)'); process.exit(1)\"",
-    "test:spike": "node -e \"console.error('test:spike is not implemented yet (Phase 3)'); process.exit(1)\"",
-    "test:soak": "node -e \"console.error('test:soak is not implemented yet (Phase 3)'); process.exit(1)\"",
-    "test:breakpoint": "node -e \"console.error('test:breakpoint is not implemented yet (Phase 3)'); process.exit(1)\""
+    "test:smoke": "node scripts/run-k6.js smoke",
+    "test:load": "node scripts/run-k6.js load",
+    "test:stress": "node scripts/run-k6.js stress",
+    "test:spike": "node scripts/run-k6.js spike",
+    "test:soak": "node scripts/run-k6.js soak",
+    "test:breakpoint": "node scripts/run-k6.js breakpoint",
+    "perf:fresh": "node scripts/run-k6.js --fresh"
   },
   "devDependencies": {
     "newman": "6.2.3",

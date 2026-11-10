@@ -53,5 +53,17 @@ services:
     cpus: "1.0"
     mem_limit: 512m
 
+  # Load generator. Not started by stack:up (profile); run via npm run test:<scenario>.
+  # Runs inside the compose network so traffic doesn't go through Docker Desktop port forwarding.
+  k6:
+    image: grafana/k6:2.3.0 # pinned, verified 2026-11-10
+    profiles: ["tools"]
+    volumes:
+      - ./k6:/scripts:ro
+      - ./reports:/reports
+    environment:
+      TARGET: docker
+      REPORTS_DIR: /reports
+
 volumes:
   pgdata:
