@@ -3,7 +3,7 @@ import { ENDPOINTS } from './http.js';
 // Shared SLOs (see PLAN.md Phase 3 / README "SLOs and thresholds").
 export const SLO = {
   http_req_failed: ['rate<0.01'],
-  'http_req_duration{name:POST /payments}': ['p(95)<500'],
+  'http_req_duration{name:POST /payments}': ['p(95)<1'], // DELIBERATELY BROKEN: throwaway PR to prove the gate fails
   checkout_duration: ['p(95)<1500'],
   idempotency_violations: ['count==0'],
   checks: ['rate>0.99'],
