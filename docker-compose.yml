@@ -73,6 +73,10 @@ services:
     environment:
       TARGET: docker
       REPORTS_DIR: /reports
+    # The load generator shares the laptop with the system under test: cap it, and watch its CPU
+    # in Grafana. A run where k6 sits above 80% of this limit is invalid (PLAN.md Phase 6).
+    cpus: "2.0"
+    mem_limit: 1g
 
 volumes:
   pgdata:
