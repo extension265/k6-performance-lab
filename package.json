@@ -14,13 +14,21 @@
     "stack:logs": "docker compose logs -f api",
     "stack:fresh": "node scripts/stack.js",
     "contract:build": "node postman/build-collection.js",
+    "dashboards:build": "node observability/grafana/build-api-vs-load.js",
+    "dashboards:check": "node scripts/check-dashboards.js",
     "test:contract": "docker compose run --rm --no-deps --build newman run payflow.postman_collection.json -e local.postman_environment.json --env-var baseUrl=http://api:3000 -r cli,htmlextra --reporter-htmlextra-export /reports/newman/contract.html --reporter-htmlextra-title \"PayFlow API contract\"",
     "test:smoke": "node scripts/run-k6.js smoke",
+    "test:smoke:prom": "node scripts/run-k6.js smoke --prom",
     "test:load": "node scripts/run-k6.js load",
+    "test:load:prom": "node scripts/run-k6.js load --prom",
     "test:stress": "node scripts/run-k6.js stress",
+    "test:stress:prom": "node scripts/run-k6.js stress --prom",
     "test:spike": "node scripts/run-k6.js spike",
+    "test:spike:prom": "node scripts/run-k6.js spike --prom",
     "test:soak": "node scripts/run-k6.js soak",
+    "test:soak:prom": "node scripts/run-k6.js soak --prom",
     "test:breakpoint": "node scripts/run-k6.js breakpoint",
+    "test:breakpoint:prom": "node scripts/run-k6.js breakpoint --prom",
     "perf:fresh": "node scripts/run-k6.js --fresh"
   }
 }

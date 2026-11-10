@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+# k6 metrics arrive via remote write (--web.enable-remote-write-receiver), not scraping.
+scrape_configs:
+  - job_name: payflow-api
+    static_configs:
+      - targets: ["api:3000"]
+
+  - job_name: cadvisor
+    static_configs:
+      - targets: ["cadvisor:8080"]
+    metric_relabel_configs:
+      # Keep only what the dashboards use, and only for containers of this compose project.
+      - source_labels: [__name__]
+        regex: container_(cpu_usage_seconds_total|cpu_cfs_(throttled_)?periods_total|spec_cpu_(quota|period)|spec_memory_limit_bytes|memory_working_set_bytes)
+        action: keep
+      - source_labels: [container_label_com_docker_compose_project]
+        regex: k6-performance-lab
+        action: keep
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

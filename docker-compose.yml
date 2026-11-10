@@ -53,6 +53,65 @@ services:
     cpus: "1.0"
     mem_limit: 512m
 
+  # ---------------------------------------------------------------- observability
+  prometheus:
+    image: prom/prometheus:v3.16.0 # pinned, verified 2026-11-10
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-remote-write-receiver # k6 pushes its metrics here (experimental-prometheus-rw)
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    cpus: "1.0"
+    mem_limit: 1g
+
+  grafana:
+    image: grafana/grafana:13.3.1 # pinned, verified 2026-11-10
+    environment:
+      # Local lab only (bound to 127.0.0.1): anyone can view without logging in (Grafana 13 allows
+      # only the Viewer role anonymously). Sign in as admin/admin to edit; dashboards live in the repo.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/api-vs-load.json
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:3001:3000" # 3000 is the API
+    depends_on:
+      - prometheus
+    cpus: "0.5"
+    mem_limit: 512m
+
+  # Per-container CPU/memory, including the k6 load generator itself.
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.6 # pinned, verified 2026-11-10
+    privileged: true
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=5s
+      - --store_container_labels=false
+      - --whitelisted_container_labels=com.docker.compose.service,com.docker.compose.project
+      - --disable_metrics=advtcp,cpu_topology,cpuset,disk,diskIO,hugetlb,memory_numa,network,oom_event,percpu,perf_event,process,referenced_memory,resctrl,sched,tcp,udp
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    cpus: "0.5"
+    mem_limit: 256m
+
+  # ---------------------------------------------------------------- tools (not started by stack:up)
   # Contract tests (npm run test:contract). Built from postman/Dockerfile; not started by stack:up.
   newman:
     build: ./postman
@@ -80,3 +139,4 @@ services:
 
 volumes:
   pgdata:
+  promdata:
