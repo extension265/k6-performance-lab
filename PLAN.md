@@ -24,6 +24,7 @@ Repo name suggestion: `k6-performance-lab` (separate from my Playwright repo `pl
 
 - **My machine:** Windows + Docker Desktop. All run commands must work on Windows. Use `npm run <script>` wrappers, not bash-only scripts. If a shell script is unavoidable, also provide a PowerShell or Node equivalent.
 - **Language:** JavaScript everywhere (API, k6 scripts, helper scripts). No TypeScript.
+- **Runtime:** Node 24 LTS everywhere (local, Docker image, CI). Node 20 is EOL.
 - **Never invent results.** Any numbers in README/docs must come from actual runs. If a run hasn't happened yet, leave a clearly marked `TODO: run and fill` placeholder.
 - **Never point load tests at third-party/public sites.** Target only the local Docker stack (and local Ollama in Phase 8).
 - Pin versions of Docker images and npm packages. Verify current image tags/package names before using them; don't guess.
@@ -77,7 +78,7 @@ k6-performance-lab/
 
 ## Phase 1 — PayFlow API (the system under test)
 
-Node 20 + Express + `pg` + Postgres, run via Docker Compose.
+Node 24 LTS + Express + `pg` + Postgres, run via Docker Compose. API image base pinned to `node:24.22.2-alpine3.24` (Node 20 is EOL; use Node 24 LTS everywhere, root `engines` is `>=24`).
 
 **Endpoints**
 | Method | Path | Notes |

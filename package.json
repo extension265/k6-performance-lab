@@ -2,9 +2,10 @@
   "name": "k6-performance-lab",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Performance engineering lab: a payment API load tested end to end with k6, Newman contract gate, Prometheus/Grafana observability and a CI perf gate.",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "stack:up": "node -e \"console.error('stack:up is not implemented yet (Phase 1)'); process.exit(1)\"",
