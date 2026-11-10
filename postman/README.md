@@ -31,4 +31,5 @@ What it covers (33 requests, run in order, sharing state through collection vari
 
 - `build-collection.js` is the source of truth. The schemas and test scripts are plain JS here. Run `npm run contract:build` after editing it.
 - `payflow.postman_collection.json` is the generated collection. It is committed and can be imported into Postman.
-- `local.postman_environment.json` points at `http://localhost:3000` with the local-only test credentials.
+- `local.postman_environment.json` points at `http://localhost:3000` (for the Postman app). `test:contract` overrides `baseUrl` to `http://api:3000`.
+- `Dockerfile` defines Newman 6.2.3 + htmlextra 1.23.1 on the pinned Node 24 image. `test:contract` runs it as the `newman` compose service, so Newman is not an npm dependency of this repo.

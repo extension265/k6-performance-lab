@@ -53,6 +53,15 @@ services:
     cpus: "1.0"
     mem_limit: 512m
 
+  # Contract tests (npm run test:contract). Built from postman/Dockerfile; not started by stack:up.
+  newman:
+    build: ./postman
+    image: payflow-newman:local
+    profiles: ["tools"]
+    volumes:
+      - ./postman:/etc/newman:ro
+      - ./reports:/reports
+
   # Load generator. Not started by stack:up (profile); run via npm run test:<scenario>.
   # Runs inside the compose network so traffic doesn't go through Docker Desktop port forwarding.
   k6:
